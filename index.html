@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Demo page for Codebook-Assisted Selective Token Denoising for Neural Codec-Based Speech Restoration." />
+  <title>Codebook-Assisted Selective Token Denoising Demo</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header" id="top">
+    <div class="header-inner">
+      <p class="eyebrow">Speech Restoration Demo</p>
+      <h1>Codebook-Assisted Selective Token Denoising for Neural Codec-Based Speech Restoration</h1>
+      <p class="authors">Zewei Wang, Tat Ming Lok, and Yao Tang</p>
+      <p class="contact">Contact: Zewei Wang (<span>zwwong at link.cuhk.edu.hk</span>)</p>
+      <div class="hero-links">
+        <a href="#abstract">Abstract</a>
+        <a href="#system">Proposed System</a>
+        <a href="#experiments">Experiments</a>
+        <a href="#demos">Audio Demos</a>
+        <a href="#code">Code</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li><a href="#abstract">Abstract</a></li>
+        <li><a href="#system">Proposed System</a>
+          <ol>
+            <li><a href="#receiver-only">Receiver-Only Restoration Setting</a></li>
+            <li><a href="#selective-edit">Selective Token Denoising</a></li>
+            <li><a href="#posterior-fusion">Channel-Likelihood Posterior Fusion</a></li>
+          </ol>
+        </li>
+        <li><a href="#experiments">Experimental Design</a>
+          <ol>
+            <li><a href="#protocol">Evaluation Protocol</a></li>
+            <li><a href="#conditions">Corruption Conditions</a></li>
+            <li><a href="#metrics">Metrics</a></li>
+          </ol>
+        </li>
+        <li><a href="#demos">Audio Demonstrations</a></li>
+        <li><a href="#code">Code</a></li>
+        <li><a href="#references">References</a></li>
+      </ol>
+    </nav>
+
+    <section id="abstract" class="section-card">
+      <h2>Abstract</h2>
+      <p>
+        Neural audio codecs represent speech as compact residual vector quantization (RVQ) token streams, but token-level corruption can severely degrade the final decoded waveform. This work studies a strict receiver-side restoration setting where the transmitter, channel protection strategy, codec encoder, and codec decoder are fixed. Only an add-on token restoration module is learned at the receiver.
+      </p>
+      <p>
+        We propose a codebook-assisted selective token denoising framework with channel-likelihood posterior fusion. The model learns both an edit policy and a replacement-token distribution from corrupted codec-token context. It uses codec-codebook representations, cross-stage interaction, local temporal modeling, stage-specific token prediction heads, and codec-aware codebook-vector supervision. For structured bit-error replacement, the receiver further computes analytical channel likelihoods and fuses them with neural token logits, so the final decision is guided by both acoustic-token context and channel-law consistency.
+      </p>
+      <figure class="main-figure">
+        <img src="Fig/system_overview.svg" alt="Overview of the proposed receiver-side speech restoration system" />
+        <figcaption>Figure 1: Overview of the receiver-side token restoration problem under neural codec token corruption.</figcaption>
+      </figure>
+    </section>
+
+    <section id="system" class="section-card">
+      <h2>Proposed System</h2>
+      <p>
+        The proposed framework operates after channel decoding and before fixed neural codec decoding. It does not modify the original transmitter or the codec. Instead, it repairs the received acoustic-token sequence and then reconstructs waveform audio using the unchanged neural codec decoder.
+      </p>
+
+      <h3 id="receiver-only">1) Receiver-Only Restoration Setting</h3>
+      <p>
+        The clean speech waveform is encoded into RVQ codec tokens. After transmission, the receiver obtains a corrupted token sequence. Directly decoding this sequence may produce severe artifacts because token errors move the decoder to incorrect codebook vectors. The proposed module inserts a receiver-side token denoiser between channel decoding and codec decoding.
+      </p>
+      <ul class="compact-list">
+        <li><strong>Input:</strong> corrupted acoustic-token sequence after channel decoding.</li>
+        <li><strong>Output:</strong> restored acoustic-token sequence for fixed codec decoding.</li>
+        <li><strong>Constraint:</strong> no modification to transmitter, channel coding, codec encoder, or codec decoder.</li>
+      </ul>
+
+      <h3 id="selective-edit">2) Selective Token Denoising</h3>
+      <p>
+        Instead of regenerating all tokens, the receiver estimates whether each token should be preserved or repaired. Reliable tokens are kept, while suspicious tokens are selectively replaced. This prevents unnecessary modification of clean tokens and reduces repair-induced artifacts.
+      </p>
+      <figure class="main-figure">
+        <img src="Fig/receiver_module.svg" alt="Selective edit-and-replace receiver module" />
+        <figcaption>Figure 2: Codec-aware selective edit-and-replace module.</figcaption>
+      </figure>
+      <div class="method-grid">
+        <article>
+          <h4>Codec-Aware Input</h4>
+          <p>Token indices are combined with RVQ-stage embeddings and frozen codec-codebook features.</p>
+        </article>
+        <article>
+          <h4>Cross-Stage Modeling</h4>
+          <p>Interactions among RVQ stages are modeled at each time frame.</p>
+        </article>
+        <article>
+          <h4>Local Temporal Modeling</h4>
+          <p>Nearby frames provide continuity cues for detecting and repairing token errors.</p>
+        </article>
+        <article>
+          <h4>Stage-Specific Heads</h4>
+          <p>Each RVQ stage uses its own token head while sharing the contextual encoder.</p>
+        </article>
+      </div>
+
+      <h3 id="posterior-fusion">3) Channel-Likelihood Posterior Fusion</h3>
+      <p>
+        For structured bit-error replacement, a corrupted token can still be a valid codec index. Therefore, the received token itself provides useful evidence about the possible clean token. The proposed posterior fusion combines neural token logits with analytical channel-likelihood logits, producing a receiver-side MAP-style token decision.
+      </p>
+      <div class="formula-box">
+        <span>posterior token evidence</span>
+        <strong>neural contextual logits + channel likelihood logits</strong>
+      </div>
+      <p>
+        The neural branch captures acoustic-token context, while the channel branch measures consistency with the observed token under the bit-error law. The final selective-edit decision uses this posterior distribution only when structured channel information is available.
+      </p>
+    </section>
+
+    <section id="experiments" class="section-card">
+      <h2>Experimental Design</h2>
+      <p>
+        We evaluate the proposed receiver-side restoration module through fixed neural codec reconstruction. The key question is whether repairing the codec-token sequence improves the final decoded waveform under controlled token corruption.
+      </p>
+      <figure class="main-figure">
+        <img src="Fig/experiment_design.svg" alt="Experimental design for token corruption and waveform reconstruction" />
+        <figcaption>Figure 3: Evaluation pipeline from clean waveform to corrupted tokens, restored tokens, and final decoded audio.</figcaption>
+      </figure>
+
+      <h3 id="protocol">1) Evaluation Protocol</h3>
+      <p>
+        Each clean waveform is encoded by a fixed neural audio codec. Synthetic token corruption is then applied to the codec-token sequence. We compare direct decoding of corrupted tokens with decoding after the proposed receiver-side restoration module.
+      </p>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Setting</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Codec</td>
+            <td>Fixed neural audio codec</td>
+            <td>Generate and decode acoustic tokens</td>
+          </tr>
+          <tr>
+            <td>Token format</td>
+            <td>Multi-codebook RVQ tokens</td>
+            <td>Test structured codec-token repair</td>
+          </tr>
+          <tr>
+            <td>Receiver setting</td>
+            <td>Unknown corruption positions</td>
+            <td>Evaluate practical receiver-side denoising</td>
+          </tr>
+          <tr>
+            <td>Comparison</td>
+            <td>Corrupted decoding vs. restored decoding</td>
+            <td>Measure waveform-level recovery</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="conditions">2) Corruption Conditions</h3>
+      <p>
+        The demo page is prepared for both ordinary token corruption and structured bit-error replacement. Replace the placeholder audio files with your actual generated examples after evaluation.
+      </p>
+      <div class="condition-grid">
+        <article>
+          <h4>I.i.d. Mask</h4>
+          <p>Random token positions are replaced by a mask symbol.</p>
+        </article>
+        <article>
+          <h4>I.i.d. Replacement</h4>
+          <p>Random token positions are replaced by other valid codec indices.</p>
+        </article>
+        <article>
+          <h4>Burst Mask</h4>
+          <p>Consecutive token frames are masked to simulate packet-level loss.</p>
+        </article>
+        <article>
+          <h4>Burst Replacement</h4>
+          <p>Consecutive token frames are replaced by valid but incorrect codec indices.</p>
+        </article>
+        <article>
+          <h4>Structured Bit-Error Replacement</h4>
+          <p>Token indices are represented as bits and corrupted by bit flips.</p>
+        </article>
+      </div>
+
+      <h3 id="metrics">3) Metrics</h3>
+      <p>
+        The final evaluation is performed after fixed codec decoding. Audio-level metrics report quality, intelligibility, and fidelity, while token-level diagnostics show whether the receiver repairs corrupted tokens without breaking originally clean ones.
+      </p>
+      <table class="info-table narrow-table">
+        <thead>
+          <tr>
+            <th>Metric Type</th>
+            <th>Metrics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Audio quality and fidelity</td>
+            <td>MSE, multi-scale STFT distance, SI-SDR, perceptual distance</td>
+          </tr>
+          <tr>
+            <td>Speech intelligibility</td>
+            <td>STOI and PESQ</td>
+          </tr>
+          <tr>
+            <td>Token repair behavior</td>
+            <td>Fix rate, break rate, edit ratio, token accuracy</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="demos" class="section-card">
+      <h2>Audio Demonstrations</h2>
+      <p>
+        The following panels are ready for your demo audio. For each case, upload three files with the same names shown in the folder instructions: clean reference, corrupted-token decoding, and restored decoding by the proposed model.
+      </p>
+
+      <h3>1) I.i.d. Token Corruption</h3>
+      <div class="demo-grid">
+        <article class="demo-card">
+          <h4>I.i.d. Mask</h4>
+          <p>Random tokens are erased by mask symbols.</p>
+          <div class="audio-row"><span>Clean</span><audio controls src="audio/iid_mask/clean.wav"></audio></div>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/iid_mask/corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/iid_mask/restored.wav"></audio></div>
+        </article>
+        <article class="demo-card">
+          <h4>I.i.d. Replacement</h4>
+          <p>Random tokens are changed to other valid codec indices.</p>
+          <div class="audio-row"><span>Clean</span><audio controls src="audio/iid_replace/clean.wav"></audio></div>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/iid_replace/corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/iid_replace/restored.wav"></audio></div>
+        </article>
+      </div>
+
+      <h3>2) Burst Token Corruption</h3>
+      <div class="demo-grid">
+        <article class="demo-card">
+          <h4>Burst Mask</h4>
+          <p>Consecutive token frames are erased, causing packet-loss-like damage.</p>
+          <div class="audio-row"><span>Clean</span><audio controls src="audio/burst_mask/clean.wav"></audio></div>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/burst_mask/corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/burst_mask/restored.wav"></audio></div>
+        </article>
+        <article class="demo-card">
+          <h4>Burst Replacement</h4>
+          <p>Consecutive token frames remain valid indices but no longer match the clean speech.</p>
+          <div class="audio-row"><span>Clean</span><audio controls src="audio/burst_replace/clean.wav"></audio></div>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/burst_replace/corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/burst_replace/restored.wav"></audio></div>
+        </article>
+      </div>
+
+      <h3>3) Structured Bit-Error Replacement</h3>
+      <p>
+        This section highlights the effect of channel-likelihood posterior fusion. The corrupted tokens remain valid codec indices, so restoration requires both acoustic-token context and channel-law evidence.
+      </p>
+      <div class="demo-grid three-col">
+        <article class="demo-card">
+          <h4>Bit Error Probability = 0.01</h4>
+          <p>Light token-index bit errors.</p>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/bit_error/pb001_corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/bit_error/pb001_restored.wav"></audio></div>
+        </article>
+        <article class="demo-card">
+          <h4>Bit Error Probability = 0.02</h4>
+          <p>Moderate structured token replacement.</p>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/bit_error/pb002_corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/bit_error/pb002_restored.wav"></audio></div>
+        </article>
+        <article class="demo-card">
+          <h4>Bit Error Probability = 0.04</h4>
+          <p>Severe structured replacement corruption.</p>
+          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/bit_error/pb004_corrupted.wav"></audio></div>
+          <div class="audio-row"><span>Restored</span><audio controls src="audio/bit_error/pb004_restored.wav"></audio></div>
+        </article>
+      </div>
+
+      <h3>4) Comparison With Benchmark Methods</h3>
+      <p>
+        This section can be used to compare the proposed token-domain receiver with waveform-domain baselines and full-token regeneration baselines. Replace the placeholder audio paths after your final benchmark generation.
+      </p>
+      <table class="demo-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Output Audio</th>
+            <th>Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Corrupted Token Decoding</td>
+            <td><audio controls src="audio/benchmark/corrupted.wav"></audio></td>
+            <td>No receiver-side restoration.</td>
+          </tr>
+          <tr>
+            <td>Waveform Baseline</td>
+            <td><audio controls src="audio/benchmark/waveform_baseline.wav"></audio></td>
+            <td>Enhancement after corrupted token decoding.</td>
+          </tr>
+          <tr>
+            <td>Full-Token Regeneration</td>
+            <td><audio controls src="audio/benchmark/full_regen.wav"></audio></td>
+            <td>All codec tokens are regenerated.</td>
+          </tr>
+          <tr>
+            <td>Proposed Selective Denoising</td>
+            <td><audio controls src="audio/benchmark/proposed.wav"></audio></td>
+            <td>Reliable tokens are preserved and unreliable tokens are repaired.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="code" class="section-card">
+      <h2>Code</h2>
+      <p>
+        The source code and audio demonstrations will be released in the GitHub repository. After creating your repository, replace the link below with your actual GitHub URL.
+      </p>
+      <p class="repo-link"><a href="https://github.com/WinfredCU/CodebookSelectiveTokenDenoising_demo" target="_blank" rel="noopener">GitHub Repository</a></p>
+    </section>
+
+    <section id="references" class="section-card">
+      <h2>References</h2>
+      <ol class="references">
+        <li>[R1] A. Défossez, J. Copet, G. Synnaeve, and Y. Adi, “High Fidelity Neural Audio Compression,” arXiv:2210.13438.</li>
+        <li>[R2] J. Valin, “A Hybrid DSP/Deep Learning Approach to Real-Time Full-Band Speech Enhancement,” 2018.</li>
+        <li>[R3] H. Schröter et al., “DeepFilterNet: Perceptually Motivated Real-Time Speech Enhancement,” 2022.</li>
+        <li>[R4] Z. Wang, T. M. Lok, and Y. Tang, “Codebook-Assisted Selective Token Denoising for Neural Codec-Based Speech Restoration,” manuscript.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© Wang Zewei</p>
+    <p><a href="#top">Back to top</a></p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
