@@ -1,0 +1,11 @@
+# Figure folder
+
+Replace the placeholder SVG files with your final figures if needed.
+
+Recommended filenames already referenced by `index.html`:
+
+- `system_overview.svg`
+- `receiver_module.svg`
+- `experiment_design.svg`
+
+You may also use PNG/JPG files, but update the paths in `index.html` accordingly.
