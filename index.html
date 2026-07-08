@@ -2,494 +2,841 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="CATD-SR demo page: receiver-side codec-token denoising for neural codec-based speech restoration." />
-  <title>CATD-SR Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZeroSC-SR: Importance-Aware Zero-Shot Semantic Speech Communication over Fading Channels</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg: #f6f8fc;
-      --panel: #ffffff;
-      --text: #172033;
-      --muted: #647083;
-      --line: #dce4ef;
-      --accent: #255fcb;
-      --accent2: #0e8aa0;
-      --soft: #eef5ff;
-      --soft2: #eefafc;
-      --dark: #0f234f;
-      --shadow: 0 14px 32px rgba(18, 42, 84, 0.08);
-      --radius: 16px;
+    .audio-sample {
+      margin: 10px 0;
     }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      color: var(--text);
-      background: var(--bg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
-      line-height: 1.65;
-    }
-
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .container { width: min(1120px, calc(100% - 36px)); margin: 0 auto; }
-
-    .hero {
-      padding: 58px 0 44px;
-      color: #fff;
-      text-align: center;
-      background: radial-gradient(circle at top left, rgba(67, 151, 255, 0.55), transparent 30%),
-                  linear-gradient(135deg, #07173c 0%, #143f8f 52%, #247ce6 100%);
-    }
-    .tag {
-      display: inline-block;
-      margin-bottom: 14px;
-      padding: 5px 14px;
-      border: 1px solid rgba(255,255,255,0.34);
-      border-radius: 999px;
-      color: #e7f2ff;
-      font-size: 0.9rem;
-      letter-spacing: 0.01em;
-    }
-    h1 {
-      margin: 0 auto 12px;
-      max-width: 980px;
-      font-size: clamp(2rem, 4.1vw, 3.55rem);
-      line-height: 1.08;
-      letter-spacing: -0.035em;
-      font-weight: 800;
-    }
-    .subtitle {
-      margin: 0 auto;
-      max-width: 900px;
-      color: #e6efff;
-      font-size: clamp(1rem, 1.8vw, 1.22rem);
-    }
-    .authors { margin-top: 18px; font-size: 1.02rem; font-weight: 560; }
-    .affiliation { margin-top: 4px; color: #dce9ff; font-size: 0.95rem; }
-    .button-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
-    .button-row a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 16px;
-      border-radius: 999px;
-      color: #fff;
-      background: rgba(255,255,255,0.14);
-      border: 1px solid rgba(255,255,255,0.28);
+    /* Larger, bolder main section titles (no Tailwind @apply, pure CSS) */
+    .section-title {
+      font-size: 1.875rem; /* text-3xl */
+      line-height: 2.25rem;
       font-weight: 700;
-      text-decoration: none;
+      margin-bottom: 1rem;
     }
-    .button-row a:hover { background: rgba(255,255,255,0.24); }
-
-    .nav-wrap {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(255,255,255,0.93);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(10px);
-    }
-    nav { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; padding: 11px 0; font-size: 0.95rem; font-weight: 700; }
-
-    section {
-      margin: 32px 0;
-      padding: 28px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-    h2 { margin: 0 0 18px; font-size: clamp(1.55rem, 2.4vw, 2.2rem); line-height: 1.15; letter-spacing: -0.02em; }
-    h3 { margin: 20px 0 10px; font-size: 1.14rem; }
-    h4 { margin: 18px 0 10px; font-size: 1rem; color: #22304a; }
-    p { margin: 0 0 14px; }
-    .lead { font-size: 1.04rem; color: #25314a; }
-    .muted { color: var(--muted); font-size: 0.95rem; }
-    .note {
-      padding: 16px 18px;
-      border-left: 4px solid var(--accent);
-      background: var(--soft);
-      border-radius: 12px;
-      color: #20304b;
-    }
-    .note.green { border-left-color: var(--accent2); background: var(--soft2); }
-
-    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .card {
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #fff;
-    }
-    .card h3 { margin-top: 0; }
-    .pill {
-      display: inline-block;
-      margin: 0 6px 8px 0;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #eef4ff;
-      color: #1f55a8;
-      font-weight: 750;
-      font-size: 0.84rem;
-    }
-    .pill.green { background: #e9fbfb; color: #007988; }
-    .pill.gray { background: #eef1f6; color: #556171; }
-    .pill.orange { background: #fff3e7; color: #9a5512; }
-
-    .figure-box {
-      margin: 18px 0 18px;
-      text-align: center;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-      background: #fbfcff;
-    }
-    .figure-box img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 10px; }
-    .caption { margin-top: 9px; color: var(--muted); font-size: 0.92rem; }
-
-    .step-list { display: grid; gap: 13px; margin-top: 16px; }
-    .step {
-      display: grid;
-      grid-template-columns: 64px 1fr;
-      gap: 14px;
-      align-items: start;
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 15px;
-      background: #ffffff;
-    }
-    .step-num {
-      width: 46px;
-      height: 46px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 14px;
-      color: #fff;
-      background: linear-gradient(135deg, #255fcb, #0e8aa0);
-      font-weight: 800;
-      box-shadow: 0 8px 18px rgba(37, 95, 203, 0.16);
-    }
-    .step h3 { margin: 0 0 6px; }
-    .novelty {
-      margin-top: 8px;
-      padding: 9px 11px;
-      border-radius: 11px;
-      background: #f2f7ff;
-      color: #243754;
-      font-size: 0.94rem;
-    }
-    .novelty strong { color: #174a9d; }
-
-    .demo-block {
-      margin-top: 22px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
-      background: #fff;
-    }
-    .demo-head {
-      padding: 16px 18px;
-      background: #f3f7ff;
-      border-bottom: 1px solid var(--line);
-    }
-    .demo-head h3 { margin: 0 0 6px; }
-    .demo-body { padding: 16px; }
-    .audio-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .audio-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .audio-grid.benchmark { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .audio-item {
-      padding: 13px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #fbfcff;
-    }
-    .audio-item.best { border-color: #9fd9df; background: #f4fdfe; }
-    .audio-item.benchmark-card { background: #fffdf9; }
-    .audio-item strong { display: block; margin-bottom: 4px; font-size: 0.96rem; }
-    .audio-item span { display: block; min-height: 34px; margin-bottom: 8px; color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
-    audio { width: 100%; height: 38px; }
-
-    table { width: 100%; border-collapse: collapse; margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 0.95rem; }
-    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-    th { background: #f0f4fb; color: #263347; font-weight: 750; }
-    tr:last-child td { border-bottom: none; }
-    code { padding: 2px 5px; border-radius: 5px; background: #eef1f6; color: #223044; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.9em; }
-    footer { margin-top: 36px; padding: 28px 0 42px; text-align: center; color: var(--muted); font-size: 0.92rem; }
-
-    @media (max-width: 940px) {
-      .grid, .grid.two, .audio-grid, .audio-grid.four, .audio-grid.benchmark { grid-template-columns: 1fr; }
-      .step { grid-template-columns: 1fr; }
-      section { padding: 22px; }
-      nav { gap: 12px; font-size: 0.9rem; }
+    /* Larger, bolder subsection titles */
+    .subsection-title {
+      font-size: 1.5rem; /* text-2xl */
+      line-height: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
     }
   </style>
 </head>
-<body>
-  <header class="hero" id="top">
-    <div class="container">
-      <span class="tag">Audio Demo Page</span>
-      <h1>CATD-SR: Channel-Assisted and Codebook-Aware Token Denoising for Speech Restoration</h1>
-      <p class="subtitle">Receiver-side neural-codec token restoration with selective editing and channel-likelihood posterior fusion.</p>
-      <div class="authors">Zewei Wang, Tat Ming Lok, and Yao Tang</div>
-      <div class="affiliation">Department of Information Engineering, The Chinese University of Hong Kong</div>
-      <div class="button-row">
-        <a href="#abstract">Abstract</a>
-        <a href="#system">Proposed System</a>
-        <a href="#demo-experiments">Experiments &amp; Demos</a>
-        <a href="https://github.com/WinfredCU/CATD-SR_demo" target="_blank" rel="noopener">GitHub</a>
-      </div>
-    </div>
-  </header>
 
-  <div class="nav-wrap">
-    <div class="container">
-      <nav>
-        <a href="#abstract">Abstract</a>
-        <a href="#system">Proposed System</a>
-        <a href="#demo-experiments">Experiments &amp; Audio Demos</a>
-      </nav>
-    </div>
+<body class="bg-gray-50">
+  <!-- Container -->
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-4">
+        ZeroSC-SR: Importance-Aware Zero-Shot Semantic Speech Communication over Fading Channels
+      </h1>
+      <div class="text-center">
+        <p class="font-medium">Zewei Wang, Guanchong Niu, Yao Tang, Tat Ming Lok, Man-On Pun</p>
+      </div>
+      <p class="text-sm text-gray-600">
+        Contact: <span class="font-medium">Zewei Wang</span> (<em>zwwong at link.cuhk.edu.hk</em>)
+      </p>
+    </header>
+    
+    <!-- Table of Contents -->
+    <nav class="mb-12 bg-white border rounded p-4 shadow">
+      <h2 class="text-xl font-bold mb-4">Table of Contents</h2>
+      <ul class="list-disc list-inside text-gray-700 ml-4">
+        <li><a href="#abstract" class="text-blue-600 hover:underline">Abstract</a></li>
+        <li>
+          <a href="#proposed-system" class="text-blue-600 hover:underline">Proposed System</a>
+          <ul class="list-decimal list-inside ml-6">
+            <li>
+              <a href="#transmitter" class="text-blue-600 hover:underline">
+                Transmitter
+              </a>
+            </li>
+            <li>
+              <a href="#iiaps-strategy" class="text-blue-600 hover:underline">
+                Iterative Importance-Aware Allocation and Power Scheduling Strategy
+              </a>
+            </li>
+            <li>
+              <a href="#receiver" class="text-blue-600 hover:underline">
+                Receiver
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="#experiment-results" class="text-blue-600 hover:underline">
+            Experiment and Numerical Results
+          </a>
+          <ul class="list-decimal list-inside ml-6">
+            <li><a href="#prompt-length" class="text-blue-600 hover:underline">Prompt Length</a></li>
+            <li><a href="#phoneme-acoustic" class="text-blue-600 hover:underline">Phonemes vs. Acoustic Features</a></li>
+            <li><a href="#iiaps-analysis" class="text-blue-600 hover:underline">IIAPS Strategy Analysis</a></li>
+            <li><a href="#comparison-models" class="text-blue-600 hover:underline">Comparison With Other Models</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="#appendix" class="text-blue-600 hover:underline">Appendix</a>
+          <ul class="list-decimal list-inside ml-6">
+            <li>
+              <a href="#appendix-prompt-length" class="text-blue-600 hover:underline">
+                Prompt Length Across Speaking Rates
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#code" class="text-blue-600 hover:underline">Code</a></li>
+        <li><a href="#references" class="text-blue-600 hover:underline">References</a></li>
+      </ul>
+    </nav>
+
+    <!-- Abstract -->
+    <section id="abstract" class="mb-12">
+      <h2 class="section-title">Abstract</h2>
+      <p class="text-gray-700">
+      Advancements in artificial intelligence have enabled the development of more efficient and semantic-aware speech communication systems. 
+      This paper introduces an innovative Zero-Shot Semantic Communication System with Speech Reconstruction (ZeroSC-SR), designed to enhance speech transmission and reconstruction in frequency-selective fading channels. 
+      By efficiently transmitting phoneme sequences and compressed prompt acoustic features, ZeroSC-SR achieves a high compression ratio and reduces transmitted data size, enabling superior performance under low-power and noisy conditions. 
+      We investigate the impact of prompt length on recognition accuracy and system performance, identifying a trade-off between performance and energy efficiency and offering practical guidelines for selecting appropriate prompt lengths.
+      We quantitatively evaluate the semantic importance of intermediate transmission data, encompassing phoneme sequences and acoustic features, through a task-oriented Mutual-Information-based approach.
+      These insights directly guide the development of our Iterative Importance-Aware Allocation and Power Scheduling strategy, which enhances transmission quality in frequency-selective fading channels by allocating channel resources based on semantic importance.
+      Experimental results show that ZeroSC-SR surpasses conventional speech communication systems, demonstrating its effectiveness in real-world applications that demand reliable and efficient speech communication over challenging channels.
+      </p>
+    </section>
+
+    <figure class="mb-4">
+      <img src="Fig/overview.svg" alt="Proposed System Diagram" class="w-full rounded shadow" />
+      <figcaption class="text-center text-sm text-gray-600 mt-2">
+        Figure 1: Overview of the ZeroSC-SR system structure.
+      </figcaption>
+    </figure>
+
+    <!-- Proposed System -->
+    <section id="proposed-system" class="mb-12">
+      <h2 class="section-title">Proposed System</h2>
+      <p class="text-gray-700 mb-4">
+        The proposed ZeroSC-SR framework combines semantic (phoneme-level) and acoustic (prompt audio codec) features 
+        to enable efficient digital speech transmission under frequency-selective fading channels. 
+      </p>
+
+      <!-- (1) Transmitter -->
+      <h3 id="transmitter" class="subsection-title">1) Transmitter</h3>
+      <p class="text-gray-700 mb-4">
+        At the transmitter, speech is split into:
+      </p>
+      <ul class="list-disc list-inside text-gray-700 mb-4 ml-6">
+        <li>
+          <strong>Phoneme Identifiers:</strong> Capturing essential linguistic elements
+          via ASR-based phonemization.
+        </li>
+        <li>
+          <strong>Prompt Audio Codec Codes:</strong> Extracted by selecting a short
+          speech prompt and compressing it through the Audio Codec Model [R1].
+        </li>
+      </ul>
+      <p class="text-gray-700 mb-4">
+        These data streams are evaluated by the mutual-information-based task-oriented approach, then converted into binary sequences and protected
+        with error-control coding (e.g., LDPC), followed by modulation (e.g., 4-QAM).
+      </p>
+      <figure class="mb-4">
+        <img src="Fig/channel_encoder.svg" alt="Channel Encoder Diagram" class="w-full rounded shadow"/>
+        <figcaption class="text-center text-sm text-gray-600 mt-2">
+          Figure 2: Channel Encoder Diagram.
+        </figcaption>
+      </figure>
+
+      <!-- (2) IIAPS Strategy -->
+      <h3 id="iiaps-strategy" class="subsection-title">
+        2) Iterative Importance-Aware Allocation and Power Scheduling Strategy
+      </h3>
+      <p class="text-gray-700 mb-4">
+        To combat frequency-selective fading, ZeroSC-SR employs an Iterative Importance-Aware Allocation and Power Scheduling (IIAPS) strategy, optimizing the assignment of data streams to subcarriers and power distribution to maximize transmission reliability while balancing intelligibility and speaker fidelity within a fixed power budget.
+      </p>
+      <p class="text-gray-700 mb-4">
+        <strong>Problem Formulation:</strong> The goal is to maximize the reliability of transmitting critical data streams over multiple subcarriers, weighted by their importance to the tasks of speech intelligibility and speaker fidelity. Importance weights are derived from a mutual-information-based approach, with a user-defined parameter balancing these objectives. The system ensures each subcarrier carries at most one stream, uses non-negative power, and adheres to a total power limit, accounting for channel gains and noise levels.
+      </p>
+      <p class="text-gray-700 mb-4">
+        <strong>IIAPS Solution:</strong> The complex optimization problem is addressed iteratively:
+      </p>
+      <ol class="list-roman list-inside text-gray-700 mb-4 ml-6">
+        <li>
+          <strong>Initial Assignment:</strong> Data streams are prioritized by their importance, and subcarriers are ranked by their channel quality. High-importance streams are paired with high-quality subcarriers to create an initial assignment.
+        </li>
+        <li>
+          <strong>Power Allocation:</strong> Power is distributed across assigned subcarriers using a water-filling approach, allocating more power to streams based on their importance and channel conditions, while respecting the total power constraint.
+        </li>
+        <li>
+          <strong>Refinement:</strong> The system iteratively evaluates swapping stream-subcarrier assignments, accepting changes that improve overall reliability, until no further improvements are possible.
+        </li>
+      </ol>
+      <p class="text-gray-700 mb-4">
+        This iterative process ensures efficient and reliable transmission by aligning stream importance with channel quality and power allocation, achieving a local optimum with low computational complexity [R7].
+      </p>
+
+      <!-- (3) Receiver -->
+      <h3 id="receiver" class="subsection-title">3) Receiver</h3>
+      <p class="text-gray-700 mb-4">
+        The receiver reverses the transmitter steps, demodulating and decoding the data
+        streams. Phoneme IDs and audio codec codes are recovered and mapped to their
+        original order based on stored index information. Finally, the VALL-E
+        model [R2] predicts the remaining codec codes, and the Audio Codec decoder
+        reconstructs the full speech waveform [R1]. This integrated pipeline
+        enables a zero-shot capability for unseen speakers, achieving high-quality
+        performance in low-power and noisy scenarios.
+      </p>
+    </section>
+
+    <!-- Experiment and Numerical Results -->
+    <section id="experiment-results" class="mb-12">
+      <h2 class="section-title">Experiment and Numerical Results</h2>
+      <p class="text-gray-700 mb-6">
+        The performance of the proposed system is evaluated under varying channel conditions. Experiments are conducted using the Libri-light dataset [R3] on an NVIDIA RTX A4000. The evaluation metrics, including the CER, WER [R4], and speaker similarity [R5], provide insights into the system’s semantic understanding and speaker fidelity.
+        We utilize three pre-trained models: Whisper [R6] for automatic speech recognition, EnCodec [R1] for audio codec model, and VALL-E [R2] for zero-shot speech synthesis.
+      </p>
+
+      <!-- Experiment Parameters Table -->
+      <div class="overflow-auto mb-6">
+        <table class="min-w-full bg-white border border-gray-300 text-gray-700">
+          <thead class="bg-gray-100 border-b">
+            <tr>
+              <th class="py-2 px-4 text-left">Parameter</th>
+              <th class="py-2 px-4 text-left">Value</th>
+              <th class="py-2 px-4 text-left">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="py-2 px-4">Error Control Coding</td>
+              <td class="py-2 px-4">LDPC</td>
+              <td class="py-2 px-4">---</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-2 px-4">Modulation Scheme</td>
+              <td class="py-2 px-4">4-QAM</td>
+              <td class="py-2 px-4">---</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-2 px-4">Input Speech Length</td>
+              <td class="py-2 px-4">~10 seconds</td>
+              <td class="py-2 px-4">---</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-2 px-4">Prompt Length</td>
+              <td class="py-2 px-4">2 seconds</td>
+              <td class="py-2 px-4">
+                <a href="#prompt-length" class="text-blue-600 hover:underline">Sec. IV.A</a>
+              </td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-2 px-4">SNR Range</td>
+              <td class="py-2 px-4">[-5, 15] dB</td>
+              <td class="py-2 px-4">
+                <a href="#phoneme-acoustic" class="text-blue-600 hover:underline">Sec. IV.B</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 1) Prompt Length -->
+      <h3 id="prompt-length" class="subsection-title">1) Prompt Length</h3>
+      <p class="text-gray-700 mb-4">
+        The length of the transmitted prompt impacts both system performance and the required transmission resources. Therefore, we seek to determine an appropriate prompt length that reduces transmission resource usage while maintaining satisfactory system performance.
+      </p>
+
+      <!-- Audio Samples for Prompt Length -->
+      <p class="text-gray-700 mb-4">
+        Below are audio samples from the final system output at different prompt lengths (1s, 2s, and 3s).
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">Prompt = 1s</p>
+          <p class="text-sm text-gray-600 mb-2">
+             For prompts under two seconds, insufficient acoustic cues and higher recognition errors degrade performance.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Length/1s/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">Prompt = 2s</p>
+          <p class="text-sm text-gray-600 mb-2">
+            The 2-second prompt length balances performance and efficiency and is selected as a practical compromise.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Length/2s/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">Prompt = 3s</p>
+          <p class="text-sm text-gray-600 mb-2">
+            For prompts > 2s, the prompt provides sufficient information, resulting in excellent overall performance.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Length/3s/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+
+      <!-- 2) Phonemes vs. Acoustic Features -->
+      <h3 id="phoneme-acoustic" class="subsection-title">2) Phonemes vs. Acoustic Features</h3>
+      <p class="text-gray-700 mb-4">
+        ZeroSC-SR simultaneously handles <strong>phoneme transmission</strong> (carrying semantic content) and <strong>acoustic feature transmission</strong> (audio codec codes capturing speaker characteristics). 
+        To illustrate their sensitivity to channel noise, we provide separate audio samples at 0 dB, 5 dB, and 10 dB for each transmission type:
+      </p>
+      <ul class="list-disc list-inside text-gray-700 mb-4 ml-4">
+        <li><strong>Phonemes:</strong> Errors in phoneme data severely affect CER/WER.</li>
+        <li><strong>Acoustic Features:</strong> Distorted audio codec codes lead to loss of speaker similarity.</li>
+      </ul>
+
+      <!-- Audio Samples for Phoneme Transmission -->
+      <p class="font-semibold mt-4 mb-2 text-gray-800">Phonemes are transmitted through a noisy channel while acoustic features remain noiseless</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 0 dB</p>
+          <p class="text-sm text-gray-600 mb-2">
+            Very Bad.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Phoneme_Acoustic_SNR/0dB_phoneme/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 5 dB</p>
+          <p class="text-sm text-gray-600 mb-2">
+            Poor.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Phoneme_Acoustic_SNR/5dB_phoneme/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 10 dB</p>
+          <p class="text-sm text-gray-600 mb-2">
+            Good.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Phoneme_Acoustic_SNR/10dB_phoneme/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+
+      <!-- Audio Samples for Acoustic Feature Transmission -->
+      <p class="font-semibold mt-4 mb-2 text-gray-800"> Acoustic features are transmitted with noise and phonemes are noiseless.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 0 dB</p>
+          <p class="text-sm text-gray-600 mb-2">
+            Poor. 
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Phoneme_Acoustic_SNR/0dB_acoustic/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 5 dB</p>
+          <p class="text-sm text-gray-600 mb-2">
+            Acceptable. 
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Phoneme_Acoustic_SNR/5dB_acoustic/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 10 dB</p>
+          <p class="text-sm text-gray-600 mb-2">
+            Good. 
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Phoneme_Acoustic_SNR/10dB_acoustic/121_127105_000008_000000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+
+      <p class="text-gray-700 mb-4">
+        Phonemes exhibit higher noise sensitivity (critical SNR: 5–10 dB) than acoustic features (critical SNR: 0–5 dB). 
+      </p>
+
+      <!-- 3) IIAPS Strategy Analysis -->
+      <h3 id="iiaps-analysis" class="subsection-title">3) IIAPS Strategy Analysis</h3>
+      <p class="text-gray-700 mb-4">
+        The IIAPS strategy is evaluated by transmitting nine semantic streams (one phoneme stream and eight audio codec stages from a 2-second prompt) over 20 OFDM subcarriers, with a fixed power budget and SNR ranging from -5 dB to 15 dB. The setup assumes perfect channel state information and equal weighting for intelligibility and speaker fidelity.
+      </p>
+      <p class="text-gray-700 mb-4">
+        <strong>Comparison Strategies:</strong>
+      </p>
+      <ul class="list-disc list-inside text-gray-700 mb-4 ml-4">
+        <li><strong>Random-Uniform:</strong> Randomly assigns streams to subcarriers with uniform power distribution.</li>
+        <li><strong>Random-WF:</strong> Uses random assignments but allocates power based on channel quality.</li>
+        <li><strong>Greedy-WF:</strong> Pairs high-importance streams with high-quality subcarriers, then applies power allocation based on channel quality.</li>
+      </ul>
+      <!-- Audio Samples for IIAPS Strategy Analysis -->
+      <p class="text-gray-700 mb-4">
+        Below are system outputs at 5 dB, 10 dB, and 15 dB for IIAPS, Random-Uniform, Random-WF, and Greedy-WF.
+      </p>
+      <!-- IIAPS Strategy -->
+      <p class="font-semibold mt-4 mb-2 text-gray-800">IIAPS Strategy</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 5 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Satisfactory.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/IIAPS/5dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 10 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Good.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/IIAPS/10dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 15 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Very Good.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/IIAPS/15dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+      <!-- Random-Uniform Strategy -->
+      <p class="font-semibold mt-4 mb-2 text-gray-800">Random-Uniform Strategy</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 5 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Very Bad.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Random-Uniform/5dB/237_134493_000005_000003.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 10 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Poor.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Random-Uniform/10dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 15 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Satisfactory.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Random-Uniform/15dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+      <!-- Random-WF Strategy -->
+      <p class="font-semibold mt-4 mb-2 text-gray-800">Random-WF Strategy</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 5 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Very Bad.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Random-WF/5dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 10 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Poor.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Random-WF/10dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 15 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Satisfactory.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Random-WF/15dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+      <!-- Greedy-WF Strategy -->
+      <p class="font-semibold mt-4 mb-2 text-gray-800">Greedy-WF Strategy</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 5 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Poor.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Greedy-WF/5dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 10 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Satisfactory.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Greedy-WF/10dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">SNR = 15 dB</p>
+          <p class="text-sm text-gray-600 mb-2">Good.</p>
+          <audio controls class="w-full">
+            <source src="audio/IIAPS_Upload/Greedy-WF/15dB/237_134493_000021_000004.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+
+      <!-- 4) Comparison With Other Models -->
+      <h3 id="comparison-models" class="subsection-title">4) Comparison With Other Models</h3>
+      <p class="text-gray-700 mb-4">
+        We benchmark ZeroSC-SR against EnCodec and LPC. Our system achieves the highest compression ratio while maintaining robust performance in low-power conditions. Though all systems converge at high power levels, ZeroSC-SR excels in challenging environments, retaining both semantic content and speaker identity when channel quality is poor.
+      </p>
+
+      <!-- Concise addition about experimental setup -->
+      <p class="text-gray-700 mb-4">
+        In our setup, total power, duration, and noise PSD are constant across all systems, with sufficient bandwidth 
+        for fixed transmission time. Consequently, larger data size leads to lower energy per bit (due to higher data rate), 
+        reducing SNR per bit and affecting overall performance.
+      </p>
+      
+      <!-- Audio Samples for Comparison With Other Models -->
+      <p class="text-gray-700 mb-4">
+        Below are placeholder samples comparing ZeroSC-SR, EnCodec, and LPC at different power levels. 
+        Observe how ZeroSC-SR preserves good system performance at lower power, whereas EnCodec and LPC generally require higher power to achieve comparable performance.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- ZeroSC-SR (1W, 10W, 100W) -->
+        <div class="audio-sample">
+          <p class="font-medium mb-2">ZeroSC-SR @ 1W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/ZeroSC-SR/power1/121_127105_000016_000006.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">ZeroSC-SR @ 10W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/ZeroSC-SR/power10/121_127105_000016_000006.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">ZeroSC-SR @ 100W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/ZeroSC-SR/power100/121_127105_000016_000006.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <!-- EnCodec (1W, 10W, 100W) -->
+        <div class="audio-sample">
+          <p class="font-medium mb-2">EnCodec @ 1W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/EnCodec/121_127105_000016_000006_power1.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">EnCodec @ 10W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/EnCodec/121_127105_000016_000006_power10.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">EnCodec @ 100W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/EnCodec/121_127105_000016_000006_power100.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <!-- LPC (10^3 W, 10^4 W, 10^5 W) -->
+        <div class="audio-sample">
+          <p class="font-medium mb-2">LPC @ 10^3 W</p>
+          <p class="text-sm text-gray-600 mb-2">
+              Be careful, the sound is harsh, turn it down.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/LPC/8230_279154_000006_000001_power1000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">LPC @ 10^4 W</p>
+          <p class="text-sm text-gray-600 mb-2">
+              Be careful, the sound is harsh, turn it down.
+          </p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/LPC/8230_279154_000006_000001_power10000.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <div class="audio-sample">
+          <p class="font-medium mb-2">LPC @ 10^5 W</p>
+          <audio controls class="w-full">
+            <source src="audio/Model_Compare/LPC/8230_279154_000006_000001_power100000order4.wav" type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+    </section>
+
+    <!-- Appendix -->
+    <section id="appendix" class="mb-12">
+      <h2 class="section-title">Appendix</h2>
+
+      <h3 id="appendix-prompt-length" class="subsection-title">Prompt Length Across Speaking Rates</h3>
+      <p class="text-gray-700 mb-4">
+        To examine whether a 2-second prompt remains effective across different speaking rates, we created fast (1.2×),
+        normal (1.0×), and slow (0.8×) tempo versions of each utterance using pitch-preserving time stretching.
+        For each rate, we varied the prompt duration from 0.5 to 5 seconds and evaluated Character Error Rate (CER)
+        and speaker similarity using the same pipeline as in Section IV-A.
+      </p>
+      <p class="text-gray-700 mb-4">
+        Speaker similarity increased rapidly and saturated around 2 seconds for all speaking rates, indicating that a
+        2-second prompt is sufficient to capture stable timbral characteristics for conditioning. CER was most favorable
+        around 1–2 seconds and tended to increase for much longer prompts (3–5 seconds), especially for very fast or very
+        slow speech, likely because longer windows accumulate more non-stationary segments, pauses, and minor
+        time-stretch artifacts that make recognition harder.
+      </p>
+      <p class="text-gray-700 mb-6">
+        Overall, within our experimental setting, a 2-second prompt is a robust operating point across speaking rates:
+        it lies near the performance–efficiency knee for speaker similarity while avoiding the CER degradation observed
+        with substantially longer prompts on fast or slow speech. Accordingly, we retain 2 seconds as the default
+        prompt duration in ZeroSC-SR.
+      </p>
+
+      <p class="text-gray-700 mb-4">
+        Below we provide listening examples for normal (1.0×), fast (1.2×), and slow (0.8×) speaking rates across prompt
+        lengths 0.5s, 1s, 2s, 3s, 4s, and 5s, using a consistent utterance for comparison.
+      </p>
+
+      <!-- Normal speech demos -->
+      <div class="mb-8">
+        <p class="font-semibold text-gray-800 mb-2">Normal speech (1.0×)</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 0.5s</p>
+            <audio controls class="w-full">
+              <source src="audio/Length/05s/121_127105_000008_000000.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 1s</p>
+            <audio controls class="w-full">
+              <source src="audio/Length/1s/121_127105_000008_000000.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 2s</p>
+            <audio controls class="w-full">
+              <source src="audio/Length/2s/121_127105_000008_000000.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 3s</p>
+            <audio controls class="w-full">
+              <source src="audio/Length/3s/121_127105_000008_000000.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 4s</p>
+            <audio controls class="w-full">
+              <source src="audio/Length/4s/121_127105_000008_000000.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 5s</p>
+            <audio controls class="w-full">
+              <source src="audio/Length/5s/121_127105_000008_000000.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fast speech demos -->
+      <div class="mb-8">
+        <p class="font-semibold text-gray-800 mb-2">Fast speech (1.2×)</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 0.5s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_fast/0.5s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 1s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_fast/1s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 2s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_fast/2s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 3s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_fast/3s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 4s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_fast/4s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 5s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_fast/5s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slow speech demos -->
+      <div class="mb-4">
+        <p class="font-semibold text-gray-800 mb-2">Slow speech (0.8×)</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 0.5s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_slow/0.5s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 1s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_slow/1s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 2s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_slow/2s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 3s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_slow/3s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 4s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_slow/4s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <div class="audio-sample">
+            <p class="font-medium mb-1">Prompt = 5s</p>
+            <audio controls class="w-full">
+              <source src="audio/Speed/length_slow/5s/121_127105_000016_000006.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Code -->
+    <section id="code" class="mb-12">
+      <h2 class="section-title">Code</h2>
+      <p class="text-gray-700 mb-4">
+        The complete source code for ZeroSC-SR is publicly available. Feel free to clone the repository and follow the instructions in the README to reproduce our experiments and audio demonstrations.
+      </p>
+      <a href="https://github.com/WinfredCU/ZeroSC-SR.git" class="text-blue-600 hover:underline">
+        GitHub Repository
+      </a>
+    </section>
+
+    <!-- References -->
+    <section id="references" class="mb-12">
+      <h2 class="section-title">References</h2>
+      <ol class="list-decimal list-inside text-gray-700 ml-6">
+        <li>
+          <strong>[R1]</strong> Défossez, A., Copet, J., Synnaeve, G., & Adi, Y. (2022).
+          "High Fidelity Neural Audio Compression." 
+          <em>arXiv preprint arXiv:2210.13438</em>.
+        </li>
+        <li>
+          <strong>[R2]</strong> Wang, C. et al. (2023). 
+          "Neural Codec Language Models Are Zero-Shot Text to Speech Synthesizers," 
+          <em>arXiv preprint arXiv:2301.02111</em>.
+        </li>
+        <li>
+          <strong>[R3]</strong> Panayotov, V., Chen, G., Povey, D., & Khudanpur, S. (2015).
+          "Librispeech: An ASR corpus based on public domain audio books."
+          <em>2015 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)</em>.
+        </li>
+        <li>
+          <strong>[R4]</strong> Klakow, D., & Peters, J. (2002).
+          "Testing the correlation of word error rate and perplexity."
+          <em>Speech Communication, 38(1-2), 19-28</em>.
+        </li>
+        <li>
+          <strong>[R5]</strong> Chen, S., Wang, C., Chen, Z., Wu, Y., Liu, S., Chen, Z., ... & Watanabe, S. (2022).
+          "WavLM: Large-Scale Self-Supervised Pre-Training for Full Stack Speech Processing."
+          <em>IEEE Journal of Selected Topics in Signal Processing, 16(6), 1505-1518</em>.
+        </li>
+        <li>
+          <strong>[R6]</strong> Radford, A., Kim, J. W., Xu, T., Brockman, G., McLeavey, C., & Sutskever, I. (2023).
+          "Robust Speech Recognition via Large-Scale Weak Supervision."
+          <em>arXiv preprint arXiv:2212.04356</em>.
+        </li>
+        <li>
+          <strong>[R7]</strong> Goldsmith, A. (2005).
+          "Wireless Communications."
+          <em>Cambridge University Press</em>.
+        </li>
+      </ol>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+      <p class="mb-2">© Wang Zewei</p>
+    </footer>
   </div>
-
-  <main class="container">
-    <section id="abstract">
-      <h2>Abstract</h2>
-      <p class="lead">
-        Neural audio codecs represent speech as compact residual vector quantization (RVQ) token streams. However,
-        token-level corruption in these streams can severely degrade the final decoded waveform. CATD-SR studies a
-        practical receiver-only restoration setting, where the transmitter, channel protection strategy, codec encoder,
-        and codec decoder remain fixed, and only an add-on token restoration module is learned at the receiver.
-      </p>
-      <p>
-        The proposed system performs selective token denoising instead of full-token regeneration. It learns when to keep
-        a received codec token and when to repair it, while predicting replacement-token distributions using codec-codebook
-        information, cross-stage interaction, local temporal context, and stage-specific prediction heads. For structured
-        valid-index replacement, CATD-SR further combines neural token logits with analytical channel likelihoods, so that
-        the final repair decision is guided by both acoustic-token context and channel-law consistency.
-      </p>
-      <p class="note">
-        This demo page focuses on listening examples. Numerical plots from the paper are intentionally omitted; each
-        experiment subsection briefly states the corruption protocol and then presents the corresponding audio demos.
-      </p>
-    </section>
-
-    <section id="system">
-      <h2>Proposed System</h2>
-      <p>
-        CATD-SR is a receiver-side add-on module placed between the fixed channel decoder and the fixed neural codec decoder.
-        It does not redesign the transmitter, redundancy strategy, codec encoder, or codec decoder. The system restores the
-        corrupted codec-token sequence first, and then lets the unchanged codec decoder synthesize the waveform.
-      </p>
-
-      <div class="figure-box">
-        <img src="Fig/proposed_system.svg" alt="Step-by-step overview of the CATD-SR receiver-side token restoration framework" />
-        <div class="caption">Fig. 1. Step-by-step overview of CATD-SR. The receiver restores codec tokens before fixed codec decoding.</div>
-      </div>
-
-      <div class="step-list">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div>
-            <h3>Receive corrupted codec tokens</h3>
-            <p>
-              The clean speech is represented by multi-stage RVQ acoustic tokens. After transmission and channel decoding,
-              the receiver obtains a token sequence that may contain masked tokens, random replacements, burst errors, or
-              structured bit-error replacements.
-            </p>
-            <div class="novelty"><strong>Novelty:</strong> The task is formulated directly in the codec-token domain under a strict receiver-only setting, rather than as waveform enhancement or end-to-end codec/transmitter redesign.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">2</div>
-          <div>
-            <h3>Build codebook-aware token representations</h3>
-            <p>
-              Each received token is embedded together with its RVQ-stage identity and codec-codebook information. Therefore,
-              the model uses the structure of neural codec symbols instead of treating token indices as ordinary unrelated labels.
-            </p>
-            <div class="novelty"><strong>Contribution:</strong> Codebook-assisted representation connects discrete token prediction with the frozen codec embedding space, making the restoration module better matched to neural codec decoding.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">3</div>
-          <div>
-            <h3>Model cross-stage and temporal context</h3>
-            <p>
-              CATD-SR mixes information across RVQ stages at the same time frame and also models local temporal continuity
-              along the token sequence. This helps the receiver infer whether a suspicious token is acoustically consistent
-              with its neighboring stages and frames.
-            </p>
-            <div class="novelty"><strong>Contribution:</strong> The model exploits both RVQ cross-stage dependency and speech temporal continuity, which are not captured by independent token-wise correction.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">4</div>
-          <div>
-            <h3>Predict edit decisions and replacement tokens</h3>
-            <p>
-              The edit branch estimates whether each received token should be preserved or modified. The token branch predicts
-              the most plausible clean token for positions that should be repaired. The final restored sequence is produced by
-              selectively keeping reliable observations and replacing only harmful tokens.
-            </p>
-            <div class="novelty"><strong>Contribution:</strong> Selective editing avoids the over-modification problem of full-token regeneration and reduces the risk of breaking tokens that were already received correctly.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">5</div>
-          <div>
-            <h3>Fuse neural prediction with channel likelihood</h3>
-            <p>
-              For structured bit-error replacement, the corrupted token is still a valid codec index. CATD-SR computes an
-              analytical likelihood for each candidate clean token according to its bit-level distance from the received token,
-              and fuses this channel likelihood with the neural replacement logits.
-            </p>
-            <div class="novelty"><strong>Novelty:</strong> Posterior fusion combines a neural contextual prior with channel-law consistency, giving a MAP-style token decision without modifying the transmitter or channel code.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">6</div>
-          <div>
-            <h3>Decode restored tokens with the fixed codec</h3>
-            <p>
-              The restored token sequence is decoded by the unchanged neural codec decoder. The final objective is to improve
-              the perceptual quality, intelligibility, and fidelity of the reconstructed speech waveform.
-            </p>
-            <div class="novelty"><strong>Contribution:</strong> CATD-SR remains modular and practical: it can be attached to an existing codec-token communication pipeline as a receiver-side restoration component.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="demo-experiments">
-      <h2>Experimental Design and Audio Demos</h2>
-      <p>
-        Clean speech is first encoded into EnCodec acoustic tokens. Token-level corruption is then applied to the codec-token
-        sequence. The corrupted tokens are either directly decoded, processed by benchmark restoration/enhancement methods,
-        or repaired by CATD-SR before codec decoding. This section only includes experiment settings that are suitable for
-        audio demonstration.
-      </p>
-      <p class="note green">
-        In the first four subsections, the demos compare clean reference, corrupted-token decoding, and CATD-SR restoration.
-        The final structured bit-error subsection additionally includes benchmark demos to make the comparison easier to hear.
-      </p>
-
-      <article class="demo-block" id="iid-mask">
-        <div class="demo-head">
-          <h3>1. I.i.d. mask corruption</h3>
-          <p class="muted">
-            Independent token positions are replaced by a mask symbol. Because corrupted positions are explicitly indicated,
-            this setting mainly evaluates whether CATD-SR can infer missing codec-token content from RVQ-stage and temporal context.
-          </p>
-        </div>
-        <div class="demo-body">
-          <div class="audio-grid">
-            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/iid_mask_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Masked tokens directly decoded by the fixed codec.</span><audio controls preload="none"><source src="audio/iid_mask_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Selective token repair before fixed codec decoding.</span><audio controls preload="none"><source src="audio/iid_mask_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-          </div>
-        </div>
-      </article>
-
-      <article class="demo-block" id="iid-replace">
-        <div class="demo-head">
-          <h3>2. I.i.d. valid-token replacement</h3>
-          <p class="muted">
-            Independent corrupted positions are replaced by ordinary valid codec-token indices. This setting is more difficult
-            than masking because a wrong token can still look legal. The demo highlights whether the selective-edit branch can
-            repair harmful replacements while preserving correct received tokens.
-          </p>
-        </div>
-        <div class="demo-body">
-          <div class="audio-grid">
-            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/iid_replace_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Valid but incorrect token replacements.</span><audio controls preload="none"><source src="audio/iid_replace_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Selective edit-and-replace restoration.</span><audio controls preload="none"><source src="audio/iid_replace_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-          </div>
-        </div>
-      </article>
-
-      <article class="demo-block" id="burst-mask">
-        <div class="demo-head">
-          <h3>3. Burst mask corruption</h3>
-          <p class="muted">
-            Consecutive codec frames are masked together, representing packet-loss-style damage. This setting tests whether
-            temporal modeling can restore speech continuity when a local segment of the codec-token stream is missing.
-          </p>
-        </div>
-        <div class="demo-body">
-          <div class="audio-grid">
-            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/burst_mask_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Consecutive masked token frames.</span><audio controls preload="none"><source src="audio/burst_mask_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Temporal-context-assisted token restoration.</span><audio controls preload="none"><source src="audio/burst_mask_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-          </div>
-        </div>
-      </article>
-
-      <article class="demo-block" id="burst-replace">
-        <div class="demo-head">
-          <h3>4. Burst valid-token replacement</h3>
-          <p class="muted">
-            Consecutive codec frames are replaced by valid but incorrect token indices. This setting combines burst damage and
-            valid-index ambiguity: the receiver must infer both where the damaged segment occurs and what token content should be restored.
-          </p>
-        </div>
-        <div class="demo-body">
-          <div class="audio-grid">
-            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/burst_replace_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Burst segment with valid wrong tokens.</span><audio controls preload="none"><source src="audio/burst_replace_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Selective repair with temporal continuity.</span><audio controls preload="none"><source src="audio/burst_replace_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-          </div>
-        </div>
-      </article>
-
-      <article class="demo-block" id="bit-error">
-        <div class="demo-head">
-          <h3>5. Structured bit-error replacement with benchmark comparison</h3>
-          <p class="muted">
-            Token indices are represented by binary bits, and independent bit flips produce valid replacement tokens. The received
-            token is still a legal codec index, but its bit-level distance to each candidate token provides useful channel evidence.
-            This subsection is used to compare posterior-fusion CATD-SR with denoiser-only restoration and representative benchmarks.
-          </p>
-        </div>
-        <div class="demo-body">
-          <h4>Main comparison</h4>
-          <div class="audio-grid four">
-            <div class="audio-item"><strong>Clean reference</strong><span>Reference speech before token corruption.</span><audio controls preload="none"><source src="audio/biterror_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Bit-error-replaced tokens directly decoded.</span><audio controls preload="none"><source src="audio/biterror_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item"><strong>Denoiser only</strong><span>Neural contextual repair without channel posterior fusion.</span><audio controls preload="none"><source src="audio/biterror_denoiser_only.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item best"><strong>CATD-SR</strong><span>Selective edit with channel-likelihood posterior fusion.</span><audio controls preload="none"><source src="audio/biterror_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-          </div>
-
-          <h4>Benchmark demos under the same final bit-error replacement condition</h4>
-          <p class="muted">
-            Waveform denoisers are applied after corrupted tokens are decoded into waveform, while the full-token regeneration
-            benchmark predicts a complete token sequence rather than selectively editing the received tokens. These demos are
-            included to make the final bit-error comparison more transparent.
-          </p>
-          <div class="audio-grid benchmark">
-            <div class="audio-item benchmark-card"><strong>RNNoise</strong><span>Waveform enhancement baseline.</span><audio controls preload="none"><source src="audio/biterror_rnnoise.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item benchmark-card"><strong>Facebook Denoiser</strong><span>Waveform enhancement baseline.</span><audio controls preload="none"><source src="audio/biterror_facebook_denoiser.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item benchmark-card"><strong>DeepFilterNet</strong><span>Waveform enhancement baseline.</span><audio controls preload="none"><source src="audio/biterror_deepfilternet.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-            <div class="audio-item benchmark-card"><strong>Full-token regeneration</strong><span>Token-domain benchmark that regenerates all tokens.</span><audio controls preload="none"><source src="audio/biterror_fullregen.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
-          </div>
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container">
-      CATD-SR Demo · GitHub Pages · <a href="https://winfredcu.github.io/CATD-SR_demo/#" target="_blank" rel="noopener">winfredcu.github.io/CATD-SR_demo</a>
-    </div>
-  </footer>
 </body>
 </html>
