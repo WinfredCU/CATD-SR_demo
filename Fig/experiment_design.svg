@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="430" viewBox="0 0 1100 430" role="img" aria-label="Experimental design placeholder">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2454a6"/></marker>
+    <style>.box{fill:#fff;stroke:#2454a6;stroke-width:3;rx:16}.bad{fill:#fff1f1;stroke:#b83737;stroke-width:3;rx:16}.good{fill:#eefaf0;stroke:#2f7b43;stroke-width:3;rx:16}.txt{font-family:Arial,Helvetica,sans-serif;fill:#1d2733;font-size:23px;font-weight:700}.sub{font-family:Arial,Helvetica,sans-serif;fill:#5e6b78;font-size:16px}.arr{stroke:#2454a6;stroke-width:4;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1100" height="430" fill="#f8fbff"/>
+  <text x="550" y="48" text-anchor="middle" class="txt">Experimental Pipeline</text>
+  <rect x="40" y="145" width="170" height="110" class="box"/><text x="125" y="192" text-anchor="middle" class="txt">Clean Audio</text><text x="125" y="220" text-anchor="middle" class="sub">reference waveform</text>
+  <rect x="260" y="145" width="170" height="110" class="box"/><text x="345" y="192" text-anchor="middle" class="txt">Encode</text><text x="345" y="220" text-anchor="middle" class="sub">clean codec tokens</text>
+  <rect x="480" y="145" width="180" height="110" class="bad"/><text x="570" y="192" text-anchor="middle" class="txt">Corrupt Tokens</text><text x="570" y="220" text-anchor="middle" class="sub">mask/replacement/burst</text>
+  <rect x="710" y="75" width="210" height="110" class="bad"/><text x="815" y="122" text-anchor="middle" class="txt">Direct Decode</text><text x="815" y="150" text-anchor="middle" class="sub">corrupted waveform</text>
+  <rect x="710" y="255" width="210" height="110" class="good"/><text x="815" y="302" text-anchor="middle" class="txt">Restore + Decode</text><text x="815" y="330" text-anchor="middle" class="sub">proposed waveform</text>
+  <rect x="970" y="165" width="95" height="100" class="box"/><text x="1018" y="207" text-anchor="middle" class="txt">Metrics</text><text x="1018" y="235" text-anchor="middle" class="sub">PESQ/STOI</text>
+  <line x1="210" y1="200" x2="256" y2="200" class="arr"/><line x1="430" y1="200" x2="476" y2="200" class="arr"/><path d="M660 180 C690 155 690 130 706 130" fill="none" class="arr"/><path d="M660 220 C690 250 690 310 706 310" fill="none" class="arr"/><line x1="920" y1="130" x2="966" y2="195" class="arr"/><line x1="920" y1="310" x2="966" y2="235" class="arr"/>
+</svg>

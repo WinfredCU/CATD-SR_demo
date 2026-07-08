@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="430" viewBox="0 0 1100 430" role="img" aria-label="System overview placeholder">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2454a6"/></marker>
+    <style>.box{fill:#fff;stroke:#2454a6;stroke-width:3;rx:18}.soft{fill:#eef4ff;stroke:#2454a6;stroke-width:3;rx:18}.txt{font-family:Arial,Helvetica,sans-serif;fill:#1d2733;font-size:24px;font-weight:700}.sub{font-family:Arial,Helvetica,sans-serif;fill:#5e6b78;font-size:17px}.arr{stroke:#2454a6;stroke-width:4;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1100" height="430" fill="#f8fbff"/>
+  <text x="550" y="48" text-anchor="middle" class="txt">Receiver-Side Neural Codec Token Restoration</text>
+  <rect x="45" y="125" width="170" height="120" class="box"/><text x="130" y="175" text-anchor="middle" class="txt">Clean</text><text x="130" y="202" text-anchor="middle" class="sub">speech waveform</text>
+  <rect x="270" y="125" width="185" height="120" class="box"/><text x="362" y="175" text-anchor="middle" class="txt">Fixed Codec</text><text x="362" y="202" text-anchor="middle" class="sub">RVQ token encoder</text>
+  <rect x="510" y="125" width="185" height="120" class="box"/><text x="603" y="175" text-anchor="middle" class="txt">Token</text><text x="603" y="202" text-anchor="middle" class="sub">corruption/channel</text>
+  <rect x="750" y="95" width="250" height="180" class="soft"/><text x="875" y="150" text-anchor="middle" class="txt">Proposed Receiver</text><text x="875" y="182" text-anchor="middle" class="sub">selective edit + posterior fusion</text><text x="875" y="212" text-anchor="middle" class="sub">restored acoustic tokens</text>
+  <rect x="405" y="315" width="250" height="72" class="box"/><text x="530" y="358" text-anchor="middle" class="txt">Fixed Codec Decoder</text>
+  <rect x="735" y="315" width="250" height="72" class="box"/><text x="860" y="358" text-anchor="middle" class="txt">Restored Waveform</text>
+  <line x1="215" y1="185" x2="266" y2="185" class="arr"/><line x1="455" y1="185" x2="506" y2="185" class="arr"/><line x1="695" y1="185" x2="746" y2="185" class="arr"/><path d="M875 275 C875 320 700 325 660 346" fill="none" class="arr"/><line x1="655" y1="351" x2="731" y2="351" class="arr"/>
+</svg>
