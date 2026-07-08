@@ -3,351 +3,493 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Demo page for Codebook-Assisted Selective Token Denoising for Neural Codec-Based Speech Restoration." />
-  <title>Codebook-Assisted Selective Token Denoising Demo</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="description" content="CATD-SR demo page: receiver-side codec-token denoising for neural codec-based speech restoration." />
+  <title>CATD-SR Demo</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #647083;
+      --line: #dce4ef;
+      --accent: #255fcb;
+      --accent2: #0e8aa0;
+      --soft: #eef5ff;
+      --soft2: #eefafc;
+      --dark: #0f234f;
+      --shadow: 0 14px 32px rgba(18, 42, 84, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { width: min(1120px, calc(100% - 36px)); margin: 0 auto; }
+
+    .hero {
+      padding: 58px 0 44px;
+      color: #fff;
+      text-align: center;
+      background: radial-gradient(circle at top left, rgba(67, 151, 255, 0.55), transparent 30%),
+                  linear-gradient(135deg, #07173c 0%, #143f8f 52%, #247ce6 100%);
+    }
+    .tag {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 5px 14px;
+      border: 1px solid rgba(255,255,255,0.34);
+      border-radius: 999px;
+      color: #e7f2ff;
+      font-size: 0.9rem;
+      letter-spacing: 0.01em;
+    }
+    h1 {
+      margin: 0 auto 12px;
+      max-width: 980px;
+      font-size: clamp(2rem, 4.1vw, 3.55rem);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      font-weight: 800;
+    }
+    .subtitle {
+      margin: 0 auto;
+      max-width: 900px;
+      color: #e6efff;
+      font-size: clamp(1rem, 1.8vw, 1.22rem);
+    }
+    .authors { margin-top: 18px; font-size: 1.02rem; font-weight: 560; }
+    .affiliation { margin-top: 4px; color: #dce9ff; font-size: 0.95rem; }
+    .button-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+    .button-row a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.28);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .button-row a:hover { background: rgba(255,255,255,0.24); }
+
+    .nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255,255,255,0.93);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+    nav { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; padding: 11px 0; font-size: 0.95rem; font-weight: 700; }
+
+    section {
+      margin: 32px 0;
+      padding: 28px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    h2 { margin: 0 0 18px; font-size: clamp(1.55rem, 2.4vw, 2.2rem); line-height: 1.15; letter-spacing: -0.02em; }
+    h3 { margin: 20px 0 10px; font-size: 1.14rem; }
+    h4 { margin: 18px 0 10px; font-size: 1rem; color: #22304a; }
+    p { margin: 0 0 14px; }
+    .lead { font-size: 1.04rem; color: #25314a; }
+    .muted { color: var(--muted); font-size: 0.95rem; }
+    .note {
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: var(--soft);
+      border-radius: 12px;
+      color: #20304b;
+    }
+    .note.green { border-left-color: var(--accent2); background: var(--soft2); }
+
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+    .card h3 { margin-top: 0; }
+    .pill {
+      display: inline-block;
+      margin: 0 6px 8px 0;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #1f55a8;
+      font-weight: 750;
+      font-size: 0.84rem;
+    }
+    .pill.green { background: #e9fbfb; color: #007988; }
+    .pill.gray { background: #eef1f6; color: #556171; }
+    .pill.orange { background: #fff3e7; color: #9a5512; }
+
+    .figure-box {
+      margin: 18px 0 18px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fbfcff;
+    }
+    .figure-box img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 10px; }
+    .caption { margin-top: 9px; color: var(--muted); font-size: 0.92rem; }
+
+    .step-list { display: grid; gap: 13px; margin-top: 16px; }
+    .step {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #ffffff;
+    }
+    .step-num {
+      width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(135deg, #255fcb, #0e8aa0);
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(37, 95, 203, 0.16);
+    }
+    .step h3 { margin: 0 0 6px; }
+    .novelty {
+      margin-top: 8px;
+      padding: 9px 11px;
+      border-radius: 11px;
+      background: #f2f7ff;
+      color: #243754;
+      font-size: 0.94rem;
+    }
+    .novelty strong { color: #174a9d; }
+
+    .demo-block {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .demo-head {
+      padding: 16px 18px;
+      background: #f3f7ff;
+      border-bottom: 1px solid var(--line);
+    }
+    .demo-head h3 { margin: 0 0 6px; }
+    .demo-body { padding: 16px; }
+    .audio-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .audio-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .audio-grid.benchmark { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .audio-item {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcff;
+    }
+    .audio-item.best { border-color: #9fd9df; background: #f4fdfe; }
+    .audio-item.benchmark-card { background: #fffdf9; }
+    .audio-item strong { display: block; margin-bottom: 4px; font-size: 0.96rem; }
+    .audio-item span { display: block; min-height: 34px; margin-bottom: 8px; color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
+    audio { width: 100%; height: 38px; }
+
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 0.95rem; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f0f4fb; color: #263347; font-weight: 750; }
+    tr:last-child td { border-bottom: none; }
+    code { padding: 2px 5px; border-radius: 5px; background: #eef1f6; color: #223044; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.9em; }
+    footer { margin-top: 36px; padding: 28px 0 42px; text-align: center; color: var(--muted); font-size: 0.92rem; }
+
+    @media (max-width: 940px) {
+      .grid, .grid.two, .audio-grid, .audio-grid.four, .audio-grid.benchmark { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 1fr; }
+      section { padding: 22px; }
+      nav { gap: 12px; font-size: 0.9rem; }
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header" id="top">
-    <div class="header-inner">
-      <p class="eyebrow">Speech Restoration Demo</p>
-      <h1>Codebook-Assisted Selective Token Denoising for Neural Codec-Based Speech Restoration</h1>
-      <p class="authors">Zewei Wang, Tat Ming Lok, and Yao Tang</p>
-      <p class="contact">Contact: Zewei Wang (<span>zwwong at link.cuhk.edu.hk</span>)</p>
-      <div class="hero-links">
+  <header class="hero" id="top">
+    <div class="container">
+      <span class="tag">Audio Demo Page</span>
+      <h1>CATD-SR: Channel-Assisted and Codebook-Aware Token Denoising for Speech Restoration</h1>
+      <p class="subtitle">Receiver-side neural-codec token restoration with selective editing and channel-likelihood posterior fusion.</p>
+      <div class="authors">Zewei Wang, Tat Ming Lok, and Yao Tang</div>
+      <div class="affiliation">Department of Information Engineering, The Chinese University of Hong Kong</div>
+      <div class="button-row">
         <a href="#abstract">Abstract</a>
         <a href="#system">Proposed System</a>
-        <a href="#experiments">Experiments</a>
-        <a href="#demos">Audio Demos</a>
-        <a href="#code">Code</a>
+        <a href="#demo-experiments">Experiments &amp; Demos</a>
+        <a href="https://github.com/WinfredCU/CATD-SR_demo" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
   </header>
 
-  <main class="page">
-    <nav class="toc" aria-label="Table of contents">
-      <h2>Table of Contents</h2>
-      <ol>
-        <li><a href="#abstract">Abstract</a></li>
-        <li><a href="#system">Proposed System</a>
-          <ol>
-            <li><a href="#receiver-only">Receiver-Only Restoration Setting</a></li>
-            <li><a href="#selective-edit">Selective Token Denoising</a></li>
-            <li><a href="#posterior-fusion">Channel-Likelihood Posterior Fusion</a></li>
-          </ol>
-        </li>
-        <li><a href="#experiments">Experimental Design</a>
-          <ol>
-            <li><a href="#protocol">Evaluation Protocol</a></li>
-            <li><a href="#conditions">Corruption Conditions</a></li>
-            <li><a href="#metrics">Metrics</a></li>
-          </ol>
-        </li>
-        <li><a href="#demos">Audio Demonstrations</a></li>
-        <li><a href="#code">Code</a></li>
-        <li><a href="#references">References</a></li>
-      </ol>
-    </nav>
+  <div class="nav-wrap">
+    <div class="container">
+      <nav>
+        <a href="#abstract">Abstract</a>
+        <a href="#system">Proposed System</a>
+        <a href="#demo-experiments">Experiments &amp; Audio Demos</a>
+      </nav>
+    </div>
+  </div>
 
-    <section id="abstract" class="section-card">
+  <main class="container">
+    <section id="abstract">
       <h2>Abstract</h2>
-      <p>
-        Neural audio codecs represent speech as compact residual vector quantization (RVQ) token streams, but token-level corruption can severely degrade the final decoded waveform. This work studies a strict receiver-side restoration setting where the transmitter, channel protection strategy, codec encoder, and codec decoder are fixed. Only an add-on token restoration module is learned at the receiver.
+      <p class="lead">
+        Neural audio codecs represent speech as compact residual vector quantization (RVQ) token streams. However,
+        token-level corruption in these streams can severely degrade the final decoded waveform. CATD-SR studies a
+        practical receiver-only restoration setting, where the transmitter, channel protection strategy, codec encoder,
+        and codec decoder remain fixed, and only an add-on token restoration module is learned at the receiver.
       </p>
       <p>
-        We propose a codebook-assisted selective token denoising framework with channel-likelihood posterior fusion. The model learns both an edit policy and a replacement-token distribution from corrupted codec-token context. It uses codec-codebook representations, cross-stage interaction, local temporal modeling, stage-specific token prediction heads, and codec-aware codebook-vector supervision. For structured bit-error replacement, the receiver further computes analytical channel likelihoods and fuses them with neural token logits, so the final decision is guided by both acoustic-token context and channel-law consistency.
+        The proposed system performs selective token denoising instead of full-token regeneration. It learns when to keep
+        a received codec token and when to repair it, while predicting replacement-token distributions using codec-codebook
+        information, cross-stage interaction, local temporal context, and stage-specific prediction heads. For structured
+        valid-index replacement, CATD-SR further combines neural token logits with analytical channel likelihoods, so that
+        the final repair decision is guided by both acoustic-token context and channel-law consistency.
       </p>
-      <figure class="main-figure">
-        <img src="Fig/system_overview.svg" alt="Overview of the proposed receiver-side speech restoration system" />
-        <figcaption>Figure 1: Overview of the receiver-side token restoration problem under neural codec token corruption.</figcaption>
-      </figure>
+      <p class="note">
+        This demo page focuses on listening examples. Numerical plots from the paper are intentionally omitted; each
+        experiment subsection briefly states the corruption protocol and then presents the corresponding audio demos.
+      </p>
     </section>
 
-    <section id="system" class="section-card">
+    <section id="system">
       <h2>Proposed System</h2>
       <p>
-        The proposed framework operates after channel decoding and before fixed neural codec decoding. It does not modify the original transmitter or the codec. Instead, it repairs the received acoustic-token sequence and then reconstructs waveform audio using the unchanged neural codec decoder.
+        CATD-SR is a receiver-side add-on module placed between the fixed channel decoder and the fixed neural codec decoder.
+        It does not redesign the transmitter, redundancy strategy, codec encoder, or codec decoder. The system restores the
+        corrupted codec-token sequence first, and then lets the unchanged codec decoder synthesize the waveform.
       </p>
 
-      <h3 id="receiver-only">1) Receiver-Only Restoration Setting</h3>
-      <p>
-        The clean speech waveform is encoded into RVQ codec tokens. After transmission, the receiver obtains a corrupted token sequence. Directly decoding this sequence may produce severe artifacts because token errors move the decoder to incorrect codebook vectors. The proposed module inserts a receiver-side token denoiser between channel decoding and codec decoding.
-      </p>
-      <ul class="compact-list">
-        <li><strong>Input:</strong> corrupted acoustic-token sequence after channel decoding.</li>
-        <li><strong>Output:</strong> restored acoustic-token sequence for fixed codec decoding.</li>
-        <li><strong>Constraint:</strong> no modification to transmitter, channel coding, codec encoder, or codec decoder.</li>
-      </ul>
-
-      <h3 id="selective-edit">2) Selective Token Denoising</h3>
-      <p>
-        Instead of regenerating all tokens, the receiver estimates whether each token should be preserved or repaired. Reliable tokens are kept, while suspicious tokens are selectively replaced. This prevents unnecessary modification of clean tokens and reduces repair-induced artifacts.
-      </p>
-      <figure class="main-figure">
-        <img src="Fig/receiver_module.svg" alt="Selective edit-and-replace receiver module" />
-        <figcaption>Figure 2: Codec-aware selective edit-and-replace module.</figcaption>
-      </figure>
-      <div class="method-grid">
-        <article>
-          <h4>Codec-Aware Input</h4>
-          <p>Token indices are combined with RVQ-stage embeddings and frozen codec-codebook features.</p>
-        </article>
-        <article>
-          <h4>Cross-Stage Modeling</h4>
-          <p>Interactions among RVQ stages are modeled at each time frame.</p>
-        </article>
-        <article>
-          <h4>Local Temporal Modeling</h4>
-          <p>Nearby frames provide continuity cues for detecting and repairing token errors.</p>
-        </article>
-        <article>
-          <h4>Stage-Specific Heads</h4>
-          <p>Each RVQ stage uses its own token head while sharing the contextual encoder.</p>
-        </article>
+      <div class="figure-box">
+        <img src="Fig/proposed_system.svg" alt="Step-by-step overview of the CATD-SR receiver-side token restoration framework" />
+        <div class="caption">Fig. 1. Step-by-step overview of CATD-SR. The receiver restores codec tokens before fixed codec decoding.</div>
       </div>
 
-      <h3 id="posterior-fusion">3) Channel-Likelihood Posterior Fusion</h3>
-      <p>
-        For structured bit-error replacement, a corrupted token can still be a valid codec index. Therefore, the received token itself provides useful evidence about the possible clean token. The proposed posterior fusion combines neural token logits with analytical channel-likelihood logits, producing a receiver-side MAP-style token decision.
-      </p>
-      <div class="formula-box">
-        <span>posterior token evidence</span>
-        <strong>neural contextual logits + channel likelihood logits</strong>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <h3>Receive corrupted codec tokens</h3>
+            <p>
+              The clean speech is represented by multi-stage RVQ acoustic tokens. After transmission and channel decoding,
+              the receiver obtains a token sequence that may contain masked tokens, random replacements, burst errors, or
+              structured bit-error replacements.
+            </p>
+            <div class="novelty"><strong>Novelty:</strong> The task is formulated directly in the codec-token domain under a strict receiver-only setting, rather than as waveform enhancement or end-to-end codec/transmitter redesign.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <h3>Build codebook-aware token representations</h3>
+            <p>
+              Each received token is embedded together with its RVQ-stage identity and codec-codebook information. Therefore,
+              the model uses the structure of neural codec symbols instead of treating token indices as ordinary unrelated labels.
+            </p>
+            <div class="novelty"><strong>Contribution:</strong> Codebook-assisted representation connects discrete token prediction with the frozen codec embedding space, making the restoration module better matched to neural codec decoding.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <h3>Model cross-stage and temporal context</h3>
+            <p>
+              CATD-SR mixes information across RVQ stages at the same time frame and also models local temporal continuity
+              along the token sequence. This helps the receiver infer whether a suspicious token is acoustically consistent
+              with its neighboring stages and frames.
+            </p>
+            <div class="novelty"><strong>Contribution:</strong> The model exploits both RVQ cross-stage dependency and speech temporal continuity, which are not captured by independent token-wise correction.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div>
+            <h3>Predict edit decisions and replacement tokens</h3>
+            <p>
+              The edit branch estimates whether each received token should be preserved or modified. The token branch predicts
+              the most plausible clean token for positions that should be repaired. The final restored sequence is produced by
+              selectively keeping reliable observations and replacing only harmful tokens.
+            </p>
+            <div class="novelty"><strong>Contribution:</strong> Selective editing avoids the over-modification problem of full-token regeneration and reduces the risk of breaking tokens that were already received correctly.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div>
+            <h3>Fuse neural prediction with channel likelihood</h3>
+            <p>
+              For structured bit-error replacement, the corrupted token is still a valid codec index. CATD-SR computes an
+              analytical likelihood for each candidate clean token according to its bit-level distance from the received token,
+              and fuses this channel likelihood with the neural replacement logits.
+            </p>
+            <div class="novelty"><strong>Novelty:</strong> Posterior fusion combines a neural contextual prior with channel-law consistency, giving a MAP-style token decision without modifying the transmitter or channel code.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">6</div>
+          <div>
+            <h3>Decode restored tokens with the fixed codec</h3>
+            <p>
+              The restored token sequence is decoded by the unchanged neural codec decoder. The final objective is to improve
+              the perceptual quality, intelligibility, and fidelity of the reconstructed speech waveform.
+            </p>
+            <div class="novelty"><strong>Contribution:</strong> CATD-SR remains modular and practical: it can be attached to an existing codec-token communication pipeline as a receiver-side restoration component.</div>
+          </div>
+        </div>
       </div>
-      <p>
-        The neural branch captures acoustic-token context, while the channel branch measures consistency with the observed token under the bit-error law. The final selective-edit decision uses this posterior distribution only when structured channel information is available.
-      </p>
     </section>
 
-    <section id="experiments" class="section-card">
-      <h2>Experimental Design</h2>
+    <section id="demo-experiments">
+      <h2>Experimental Design and Audio Demos</h2>
       <p>
-        We evaluate the proposed receiver-side restoration module through fixed neural codec reconstruction. The key question is whether repairing the codec-token sequence improves the final decoded waveform under controlled token corruption.
+        Clean speech is first encoded into EnCodec acoustic tokens. Token-level corruption is then applied to the codec-token
+        sequence. The corrupted tokens are either directly decoded, processed by benchmark restoration/enhancement methods,
+        or repaired by CATD-SR before codec decoding. This section only includes experiment settings that are suitable for
+        audio demonstration.
       </p>
-      <figure class="main-figure">
-        <img src="Fig/experiment_design.svg" alt="Experimental design for token corruption and waveform reconstruction" />
-        <figcaption>Figure 3: Evaluation pipeline from clean waveform to corrupted tokens, restored tokens, and final decoded audio.</figcaption>
-      </figure>
-
-      <h3 id="protocol">1) Evaluation Protocol</h3>
-      <p>
-        Each clean waveform is encoded by a fixed neural audio codec. Synthetic token corruption is then applied to the codec-token sequence. We compare direct decoding of corrupted tokens with decoding after the proposed receiver-side restoration module.
-      </p>
-      <table class="info-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Setting</th>
-            <th>Purpose</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Codec</td>
-            <td>Fixed neural audio codec</td>
-            <td>Generate and decode acoustic tokens</td>
-          </tr>
-          <tr>
-            <td>Token format</td>
-            <td>Multi-codebook RVQ tokens</td>
-            <td>Test structured codec-token repair</td>
-          </tr>
-          <tr>
-            <td>Receiver setting</td>
-            <td>Unknown corruption positions</td>
-            <td>Evaluate practical receiver-side denoising</td>
-          </tr>
-          <tr>
-            <td>Comparison</td>
-            <td>Corrupted decoding vs. restored decoding</td>
-            <td>Measure waveform-level recovery</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3 id="conditions">2) Corruption Conditions</h3>
-      <p>
-        The demo page is prepared for both ordinary token corruption and structured bit-error replacement. Replace the placeholder audio files with your actual generated examples after evaluation.
-      </p>
-      <div class="condition-grid">
-        <article>
-          <h4>I.i.d. Mask</h4>
-          <p>Random token positions are replaced by a mask symbol.</p>
-        </article>
-        <article>
-          <h4>I.i.d. Replacement</h4>
-          <p>Random token positions are replaced by other valid codec indices.</p>
-        </article>
-        <article>
-          <h4>Burst Mask</h4>
-          <p>Consecutive token frames are masked to simulate packet-level loss.</p>
-        </article>
-        <article>
-          <h4>Burst Replacement</h4>
-          <p>Consecutive token frames are replaced by valid but incorrect codec indices.</p>
-        </article>
-        <article>
-          <h4>Structured Bit-Error Replacement</h4>
-          <p>Token indices are represented as bits and corrupted by bit flips.</p>
-        </article>
-      </div>
-
-      <h3 id="metrics">3) Metrics</h3>
-      <p>
-        The final evaluation is performed after fixed codec decoding. Audio-level metrics report quality, intelligibility, and fidelity, while token-level diagnostics show whether the receiver repairs corrupted tokens without breaking originally clean ones.
-      </p>
-      <table class="info-table narrow-table">
-        <thead>
-          <tr>
-            <th>Metric Type</th>
-            <th>Metrics</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Audio quality and fidelity</td>
-            <td>MSE, multi-scale STFT distance, SI-SDR, perceptual distance</td>
-          </tr>
-          <tr>
-            <td>Speech intelligibility</td>
-            <td>STOI and PESQ</td>
-          </tr>
-          <tr>
-            <td>Token repair behavior</td>
-            <td>Fix rate, break rate, edit ratio, token accuracy</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section id="demos" class="section-card">
-      <h2>Audio Demonstrations</h2>
-      <p>
-        The following panels are ready for your demo audio. For each case, upload three files with the same names shown in the folder instructions: clean reference, corrupted-token decoding, and restored decoding by the proposed model.
+      <p class="note green">
+        In the first four subsections, the demos compare clean reference, corrupted-token decoding, and CATD-SR restoration.
+        The final structured bit-error subsection additionally includes benchmark demos to make the comparison easier to hear.
       </p>
 
-      <h3>1) I.i.d. Token Corruption</h3>
-      <div class="demo-grid">
-        <article class="demo-card">
-          <h4>I.i.d. Mask</h4>
-          <p>Random tokens are erased by mask symbols.</p>
-          <div class="audio-row"><span>Clean</span><audio controls src="audio/iid_mask/clean.wav"></audio></div>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/iid_mask/corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/iid_mask/restored.wav"></audio></div>
-        </article>
-        <article class="demo-card">
-          <h4>I.i.d. Replacement</h4>
-          <p>Random tokens are changed to other valid codec indices.</p>
-          <div class="audio-row"><span>Clean</span><audio controls src="audio/iid_replace/clean.wav"></audio></div>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/iid_replace/corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/iid_replace/restored.wav"></audio></div>
-        </article>
-      </div>
+      <article class="demo-block" id="iid-mask">
+        <div class="demo-head">
+          <h3>1. I.i.d. mask corruption</h3>
+          <p class="muted">
+            Independent token positions are replaced by a mask symbol. Because corrupted positions are explicitly indicated,
+            this setting mainly evaluates whether CATD-SR can infer missing codec-token content from RVQ-stage and temporal context.
+          </p>
+        </div>
+        <div class="demo-body">
+          <div class="audio-grid">
+            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/iid_mask_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Masked tokens directly decoded by the fixed codec.</span><audio controls preload="none"><source src="audio/iid_mask_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Selective token repair before fixed codec decoding.</span><audio controls preload="none"><source src="audio/iid_mask_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+          </div>
+        </div>
+      </article>
 
-      <h3>2) Burst Token Corruption</h3>
-      <div class="demo-grid">
-        <article class="demo-card">
-          <h4>Burst Mask</h4>
-          <p>Consecutive token frames are erased, causing packet-loss-like damage.</p>
-          <div class="audio-row"><span>Clean</span><audio controls src="audio/burst_mask/clean.wav"></audio></div>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/burst_mask/corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/burst_mask/restored.wav"></audio></div>
-        </article>
-        <article class="demo-card">
-          <h4>Burst Replacement</h4>
-          <p>Consecutive token frames remain valid indices but no longer match the clean speech.</p>
-          <div class="audio-row"><span>Clean</span><audio controls src="audio/burst_replace/clean.wav"></audio></div>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/burst_replace/corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/burst_replace/restored.wav"></audio></div>
-        </article>
-      </div>
+      <article class="demo-block" id="iid-replace">
+        <div class="demo-head">
+          <h3>2. I.i.d. valid-token replacement</h3>
+          <p class="muted">
+            Independent corrupted positions are replaced by ordinary valid codec-token indices. This setting is more difficult
+            than masking because a wrong token can still look legal. The demo highlights whether the selective-edit branch can
+            repair harmful replacements while preserving correct received tokens.
+          </p>
+        </div>
+        <div class="demo-body">
+          <div class="audio-grid">
+            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/iid_replace_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Valid but incorrect token replacements.</span><audio controls preload="none"><source src="audio/iid_replace_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Selective edit-and-replace restoration.</span><audio controls preload="none"><source src="audio/iid_replace_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+          </div>
+        </div>
+      </article>
 
-      <h3>3) Structured Bit-Error Replacement</h3>
-      <p>
-        This section highlights the effect of channel-likelihood posterior fusion. The corrupted tokens remain valid codec indices, so restoration requires both acoustic-token context and channel-law evidence.
-      </p>
-      <div class="demo-grid three-col">
-        <article class="demo-card">
-          <h4>Bit Error Probability = 0.01</h4>
-          <p>Light token-index bit errors.</p>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/bit_error/pb001_corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/bit_error/pb001_restored.wav"></audio></div>
-        </article>
-        <article class="demo-card">
-          <h4>Bit Error Probability = 0.02</h4>
-          <p>Moderate structured token replacement.</p>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/bit_error/pb002_corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/bit_error/pb002_restored.wav"></audio></div>
-        </article>
-        <article class="demo-card">
-          <h4>Bit Error Probability = 0.04</h4>
-          <p>Severe structured replacement corruption.</p>
-          <div class="audio-row"><span>Corrupted</span><audio controls src="audio/bit_error/pb004_corrupted.wav"></audio></div>
-          <div class="audio-row"><span>Restored</span><audio controls src="audio/bit_error/pb004_restored.wav"></audio></div>
-        </article>
-      </div>
+      <article class="demo-block" id="burst-mask">
+        <div class="demo-head">
+          <h3>3. Burst mask corruption</h3>
+          <p class="muted">
+            Consecutive codec frames are masked together, representing packet-loss-style damage. This setting tests whether
+            temporal modeling can restore speech continuity when a local segment of the codec-token stream is missing.
+          </p>
+        </div>
+        <div class="demo-body">
+          <div class="audio-grid">
+            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/burst_mask_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Consecutive masked token frames.</span><audio controls preload="none"><source src="audio/burst_mask_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Temporal-context-assisted token restoration.</span><audio controls preload="none"><source src="audio/burst_mask_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+          </div>
+        </div>
+      </article>
 
-      <h3>4) Comparison With Benchmark Methods</h3>
-      <p>
-        This section can be used to compare the proposed token-domain receiver with waveform-domain baselines and full-token regeneration baselines. Replace the placeholder audio paths after your final benchmark generation.
-      </p>
-      <table class="demo-table">
-        <thead>
-          <tr>
-            <th>Method</th>
-            <th>Output Audio</th>
-            <th>Comment</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Corrupted Token Decoding</td>
-            <td><audio controls src="audio/benchmark/corrupted.wav"></audio></td>
-            <td>No receiver-side restoration.</td>
-          </tr>
-          <tr>
-            <td>Waveform Baseline</td>
-            <td><audio controls src="audio/benchmark/waveform_baseline.wav"></audio></td>
-            <td>Enhancement after corrupted token decoding.</td>
-          </tr>
-          <tr>
-            <td>Full-Token Regeneration</td>
-            <td><audio controls src="audio/benchmark/full_regen.wav"></audio></td>
-            <td>All codec tokens are regenerated.</td>
-          </tr>
-          <tr>
-            <td>Proposed Selective Denoising</td>
-            <td><audio controls src="audio/benchmark/proposed.wav"></audio></td>
-            <td>Reliable tokens are preserved and unreliable tokens are repaired.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+      <article class="demo-block" id="burst-replace">
+        <div class="demo-head">
+          <h3>4. Burst valid-token replacement</h3>
+          <p class="muted">
+            Consecutive codec frames are replaced by valid but incorrect token indices. This setting combines burst damage and
+            valid-index ambiguity: the receiver must infer both where the damaged segment occurs and what token content should be restored.
+          </p>
+        </div>
+        <div class="demo-body">
+          <div class="audio-grid">
+            <div class="audio-item"><strong>Clean reference</strong><span>Codec-constrained reference speech.</span><audio controls preload="none"><source src="audio/burst_replace_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Burst segment with valid wrong tokens.</span><audio controls preload="none"><source src="audio/burst_replace_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item best"><strong>CATD-SR restored</strong><span>Selective repair with temporal continuity.</span><audio controls preload="none"><source src="audio/burst_replace_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+          </div>
+        </div>
+      </article>
 
-    <section id="code" class="section-card">
-      <h2>Code</h2>
-      <p>
-        The source code and audio demonstrations will be released in the GitHub repository. After creating your repository, replace the link below with your actual GitHub URL.
-      </p>
-      <p class="repo-link"><a href="https://github.com/WinfredCU/CodebookSelectiveTokenDenoising_demo" target="_blank" rel="noopener">GitHub Repository</a></p>
-    </section>
+      <article class="demo-block" id="bit-error">
+        <div class="demo-head">
+          <h3>5. Structured bit-error replacement with benchmark comparison</h3>
+          <p class="muted">
+            Token indices are represented by binary bits, and independent bit flips produce valid replacement tokens. The received
+            token is still a legal codec index, but its bit-level distance to each candidate token provides useful channel evidence.
+            This subsection is used to compare posterior-fusion CATD-SR with denoiser-only restoration and representative benchmarks.
+          </p>
+        </div>
+        <div class="demo-body">
+          <h4>Main comparison</h4>
+          <div class="audio-grid four">
+            <div class="audio-item"><strong>Clean reference</strong><span>Reference speech before token corruption.</span><audio controls preload="none"><source src="audio/biterror_clean.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item"><strong>Corrupted-token decoding</strong><span>Bit-error-replaced tokens directly decoded.</span><audio controls preload="none"><source src="audio/biterror_corrupted.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item"><strong>Denoiser only</strong><span>Neural contextual repair without channel posterior fusion.</span><audio controls preload="none"><source src="audio/biterror_denoiser_only.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item best"><strong>CATD-SR</strong><span>Selective edit with channel-likelihood posterior fusion.</span><audio controls preload="none"><source src="audio/biterror_catd_sr.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+          </div>
 
-    <section id="references" class="section-card">
-      <h2>References</h2>
-      <ol class="references">
-        <li>[R1] A. Défossez, J. Copet, G. Synnaeve, and Y. Adi, “High Fidelity Neural Audio Compression,” arXiv:2210.13438.</li>
-        <li>[R2] J. Valin, “A Hybrid DSP/Deep Learning Approach to Real-Time Full-Band Speech Enhancement,” 2018.</li>
-        <li>[R3] H. Schröter et al., “DeepFilterNet: Perceptually Motivated Real-Time Speech Enhancement,” 2022.</li>
-        <li>[R4] Z. Wang, T. M. Lok, and Y. Tang, “Codebook-Assisted Selective Token Denoising for Neural Codec-Based Speech Restoration,” manuscript.</li>
-      </ol>
+          <h4>Benchmark demos under the same final bit-error replacement condition</h4>
+          <p class="muted">
+            Waveform denoisers are applied after corrupted tokens are decoded into waveform, while the full-token regeneration
+            benchmark predicts a complete token sequence rather than selectively editing the received tokens. These demos are
+            included to make the final bit-error comparison more transparent.
+          </p>
+          <div class="audio-grid benchmark">
+            <div class="audio-item benchmark-card"><strong>RNNoise</strong><span>Waveform enhancement baseline.</span><audio controls preload="none"><source src="audio/biterror_rnnoise.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item benchmark-card"><strong>Facebook Denoiser</strong><span>Waveform enhancement baseline.</span><audio controls preload="none"><source src="audio/biterror_facebook_denoiser.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item benchmark-card"><strong>DeepFilterNet</strong><span>Waveform enhancement baseline.</span><audio controls preload="none"><source src="audio/biterror_deepfilternet.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+            <div class="audio-item benchmark-card"><strong>Full-token regeneration</strong><span>Token-domain benchmark that regenerates all tokens.</span><audio controls preload="none"><source src="audio/biterror_fullregen.wav" type="audio/wav" />Your browser does not support audio.</audio></div>
+          </div>
+        </div>
+      </article>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <p>© Wang Zewei</p>
-    <p><a href="#top">Back to top</a></p>
+  <footer>
+    <div class="container">
+      CATD-SR Demo · GitHub Pages · <a href="https://winfredcu.github.io/CATD-SR_demo/#" target="_blank" rel="noopener">winfredcu.github.io/CATD-SR_demo</a>
+    </div>
   </footer>
-
-  <script src="js/main.js"></script>
 </body>
 </html>
